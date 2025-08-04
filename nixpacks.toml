@@ -5,8 +5,8 @@ nixPkgs = ["python39", "pip"]
 cmds = ["pip install -r requirements.txt"]
 
 [phases.build]
-cmds = ["cd backend && alembic upgrade head || echo 'Migration skipped'"]
+cmds = ["alembic upgrade head || echo 'Migration skipped'"]
 
 [start]
-cmd = "cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT"
+cmd = "uvicorn main:app --host 0.0.0.0 --port $PORT"
 
