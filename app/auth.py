@@ -55,7 +55,7 @@ def verify_token(token: str):
         )
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
-    from models import User
+    from .models import User
     
     token = credentials.credentials
     username = verify_token(token)

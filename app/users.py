@@ -23,8 +23,6 @@ def create_user(db: Session, user: UserCreate):
     return db_user
 
 def authenticate_user(db: Session, username: str, password: str):
-    from auth import verify_password
-    
     user = get_user_by_username(db, username)
     if not user:
         return False
