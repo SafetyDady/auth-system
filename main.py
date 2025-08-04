@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+# from fastapi.staticfiles import StaticFiles  # Not needed for pure backend
+# from fastapi.responses import FileResponse  # Not needed for pure backend
 from sqlalchemy.orm import Session
 from datetime import timedelta
 import os
@@ -23,16 +23,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files
-app.mount("/static", StaticFiles(directory="frontend"), name="static")
+# Mount static files - Commented out for pure backend deployment
+# app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
 @app.get("/")
 async def root():
-    return FileResponse("frontend/index.html")
+    return {"message": "Auth System API", "docs": "/docs", "health": "/health"}
 
-@app.get("/login")
-async def login_page():
-    return FileResponse("frontend/login.html")
+# @app.get("/login")
+# async def login_page():
+#     return FileResponse("frontend/login.html")
 
 @app.post("/auth/login", response_model=Token)
 async def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
@@ -59,14 +59,22 @@ async def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
 async def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
 
+# @app.get("/dashboard")
+# async def dashboard(current_user: User = Depends(get_current_user)):
+#     if current_user.role == "superadmin":
+#         return FileResponse("frontend/superadmin_dashboard.html")
+#     elif current_user.role in ["admin1", "admin2"]:
+#         return FileResponse("frontend/admin_dashboard.html")
+#     else:
+#         raise HTTPException(status_code=403, detail="Access denied")
+
 @app.get("/dashboard")
 async def dashboard(current_user: User = Depends(get_current_user)):
-    if current_user.role == "superadmin":
-        return FileResponse("frontend/superadmin_dashboard.html")
-    elif current_user.role in ["admin1", "admin2"]:
-        return FileResponse("frontend/admin_dashboard.html")
-    else:
-        raise HTTPException(status_code=403, detail="Access denied")
+    return {
+        "message": f"Welcome {current_user.username}",
+        "role": current_user.role,
+        "access_level": "superadmin" if current_user.role == "superadmin" else "admin"
+    }
 
 @app.get("/health")
 async def health_check():
