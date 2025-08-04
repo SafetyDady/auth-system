@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperAdmin Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div class="user-info">
+                <h2>SuperAdmin Dashboard</h2>
+                <span class="role-badge role-superadmin">SuperAdmin</span>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+        
+        <div class="dashboard-content">
+            <div class="card">
+                <h3>🔐 Full System Access</h3>
+                <p>You have complete access to all system features and user management capabilities.</p>
+            </div>
+            
+            <div class="card">
+                <h3>👥 User Management</h3>
+                <p>Create, modify, and delete user accounts. Manage roles and permissions.</p>
+            </div>
+            
+            <div class="card">
+                <h3>📊 System Analytics</h3>
+                <p>View comprehensive system statistics and user activity reports.</p>
+            </div>
+            
+            <div class="card">
+                <h3>⚙️ System Configuration</h3>
+                <p>Configure system settings, security policies, and application parameters.</p>
+            </div>
+            
+            <div class="card">
+                <h3>🛡️ Security Center</h3>
+                <p>Monitor security events, manage access logs, and configure authentication settings.</p>
+            </div>
+            
+            <div class="card">
+                <h3>🔄 Backup & Recovery</h3>
+                <p>Manage system backups, data recovery, and disaster recovery procedures.</p>
+            </div>
+        </div>
+        
+        <div id="user-info" class="message"></div>
+    </div>
+
+    <script>
+        // Check authentication on page load
+        window.onload = async function() {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                window.location.href = '/static/login.html';
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:8001/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    if (user.role !== 'superadmin') {
+                        alert('Access denied. SuperAdmin role required.');
+                        window.location.href = '/static/login.html';
+                    }
+                    document.getElementById('user-info').innerHTML = 
+                        `<p class="success">Welcome, ${user.username}! (${user.email})</p>`;
+                } else {
+                    window.location.href = '/static/login.html';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                window.location.href = '/static/login.html';
+            }
+        };
+        
+        function logout() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('user_role');
+            window.location.href = '/static/login.html';
+        }
+    </script>
+</body>
+</html>
+
