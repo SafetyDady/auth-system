@@ -3,7 +3,7 @@
 ## 📋 **Test Summary**
 **Date**: 2025-08-04  
 **Environment**: Sandbox Ubuntu 22.04  
-**Database**: SQLite (test_auth.db)  
+**Database**: PostgreSQL Railway Database  
 **Server**: FastAPI + Uvicorn (Port 8002)
 
 ---
@@ -19,7 +19,7 @@
 ### 🗄️ **Database Tests**
 - ✅ **User Creation**: Initial users (superadmin, admin1, admin2) created successfully
 - ✅ **Password Hashing**: bcrypt working correctly
-- ✅ **Database Connection**: SQLite connection established
+- ✅ **Database Connection**: PostgreSQL Railway connection established
 
 ### 🔐 **Authentication Tests**
 - ✅ **JWT Generation**: Tokens generated with correct payload
@@ -73,7 +73,7 @@
 
 ### **.env Settings**
 ```
-DATABASE_URL=sqlite:///./test_auth.db
+DATABASE_URL=postgresql://postgres:TYWlnCcsPDIephEWIHxiKgxaEFpddIqN@postgres.railway.internal:5432/railway
 JWT_SECRET=super-secret-key-for-jwt-token-generation-and-validation
 JWT_EXPIRE_MINUTES=60
 ```
