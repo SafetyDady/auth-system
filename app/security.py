@@ -140,7 +140,11 @@ def get_cors_origins() -> list:
     production_origins = [
         "https://yourdomain.com",
         "https://www.yourdomain.com",
-        "https://app.yourdomain.com"
+        "https://app.yourdomain.com",
+        # Vercel deployment domains
+        "https://auth-system-frontend-euelgoxbl-sss-group.vercel.app",
+        "https://auth-system-frontend-iota.vercel.app",
+        "https://auth-system-frontend-lol2.vercel.app"
     ]
     
     # Development origins
