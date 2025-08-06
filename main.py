@@ -410,3 +410,61 @@ if __name__ == "__main__":
     
     uvicorn.run(app, **config)
 
+
+
+@app.get("/users", response_model=List[dict])
+@limiter.limit("30/minute")
+async def get_users(
+    request: Request, 
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get all users - requires admin or superadmin role"""
+    
+    try:
+        # Check permissions
+        if current_user.role not in ["admin", "superadmin"]:
+            log_security_event(
+                "unauthorized_users_access",
+                {"user": current_user.username, "role": current_user.role},
+                request
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions to access users"
+            )
+        
+        # Get all users from database
+        users = db.query(User).all()
+        
+        # Convert to response format
+        users_data = []
+        for user in users:
+            users_data.append({
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "role": user.role,
+                "status": "active" if user.is_active else "inactive",
+                "created_at": user.created_at.isoformat() if user.created_at else None,
+                "last_login": user.last_login.isoformat() if user.last_login else None
+            })
+        
+        log_auth_event(
+            "users_accessed",
+            username=current_user.username,
+            success=True,
+            details={"users_count": len(users_data)}
+        )
+        
+        return users_data
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching users: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch users"
+        )
+
