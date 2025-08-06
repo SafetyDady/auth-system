@@ -184,80 +184,96 @@ async def root(request: Request):
 async def login(request: Request, user_credentials: UserLogin, db: Session = Depends(get_db)):
     """Enhanced login endpoint with security features"""
     
-    # Validate request size
-    validate_request_size(request)
-    
-    # Additional input validation
-    if not InputValidator.validate_username(user_credentials.username):
+    try:
+        # Validate request size
+        validate_request_size(request)
+        
+        # Additional input validation
+        if not InputValidator.validate_username(user_credentials.username):
+            log_security_event(
+                "invalid_username_format",
+                {"username": user_credentials.username},
+                request
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid username format"
+            )
+        
+        if not InputValidator.validate_password(user_credentials.password):
+            log_security_event(
+                "weak_password_attempt",
+                {"username": user_credentials.username},
+                request
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Password does not meet security requirements"
+            )
+        
+        # Authenticate user
+        user = authenticate_user(db, user_credentials.username, user_credentials.password)
+        if not user:
+            log_auth_event(
+                "login_failed",
+                username=user_credentials.username,
+                success=False,
+                details={"reason": "invalid_credentials"}
+            )
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect username or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        # Check if user is active
+        if not user.is_active:
+            log_auth_event(
+                "login_failed",
+                username=user_credentials.username,
+                success=False,
+                details={"reason": "account_disabled"}
+            )
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Account is disabled"
+            )
+        
+        # Create access token
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": user.username}, expires_delta=access_token_expires
+        )
+        
+        # Log successful login
+        log_auth_event(
+            "login_success",
+            username=user.username,
+            success=True,
+            details={"role": user.role}
+        )
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": user,
+            "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60  # Convert to seconds
+        }
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        # Handle any unexpected exceptions
         log_security_event(
-            "invalid_username_format",
-            {"username": user_credentials.username},
+            "login_exception",
+            {"username": user_credentials.username, "error": str(e)},
             request
         )
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid username format"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Authentication error: {str(e)}"
         )
-    
-    if not InputValidator.validate_password(user_credentials.password):
-        log_security_event(
-            "weak_password_attempt",
-            {"username": user_credentials.username},
-            request
-        )
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Password does not meet security requirements"
-        )
-    
-    # Authenticate user
-    user = authenticate_user(db, user_credentials.username, user_credentials.password)
-    if not user:
-        log_auth_event(
-            "login_failed",
-            username=user_credentials.username,
-            success=False,
-            details={"reason": "invalid_credentials"}
-        )
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    # Check if user is active
-    if not user.is_active:
-        log_auth_event(
-            "login_failed",
-            username=user_credentials.username,
-            success=False,
-            details={"reason": "account_disabled"}
-        )
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Account is disabled"
-        )
-    
-    # Create access token
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
-    
-    # Log successful login
-    log_auth_event(
-        "login_success",
-        username=user.username,
-        success=True,
-        details={"role": user.role}
-    )
-    
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": user,
-        "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60  # Convert to seconds
-    }
 
 @app.get("/auth/me", response_model=UserSchema)
 @limiter.limit("100/minute")

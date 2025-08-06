@@ -23,10 +23,15 @@ def create_user(db: Session, user: UserCreate):
     return db_user
 
 def authenticate_user(db: Session, username: str, password: str):
-    user = get_user_by_username(db, username)
-    if not user:
+    try:
+        user = get_user_by_username(db, username)
+        if not user:
+            return False
+        if not verify_password(password, user.hashed_password):
+            return False
+        return user
+    except Exception as e:
+        # Log the error but don't expose it
+        print(f"Authentication error for user {username}: {str(e)}")
         return False
-    if not verify_password(password, user.hashed_password):
-        return False
-    return user
 
