@@ -66,10 +66,10 @@ app.add_middleware(SecurityHeadersMiddleware)
 # Add request logging middleware
 app.add_middleware(RequestLoggingMiddleware)
 
-# Enhanced CORS middleware with environment-specific origins
+# Enhanced CORS middleware with regex pattern for Vercel domains
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=get_cors_origins(),
+    allow_origin_regex=r"https:\/\/auth-system-frontend-[a-z0-9]+\.vercel\.app",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
