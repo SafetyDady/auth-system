@@ -145,7 +145,8 @@ def get_cors_origins() -> list:
         "https://auth-system-frontend-euelgoxbl-sss-group.vercel.app",
         "https://auth-system-frontend-iota.vercel.app",
         "https://auth-system-frontend-lol2.vercel.app",
-        "https://auth-system-frontend-rk2kuncw4-sss-group.vercel.app"
+        "https://auth-system-frontend-rk2kuncw4-sss-group.vercel.app",
+        "https://auth-system-frontend-xuur0menh-sss-group.vercel.app"
     ]
     
     # Development origins
