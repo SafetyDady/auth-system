@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.orm import Session
 from datetime import timedelta
+from typing import List
 import os
 import uuid
 from contextlib import asynccontextmanager
