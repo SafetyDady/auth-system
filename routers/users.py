@@ -31,9 +31,16 @@ async def get_users(
 async def create_user(
     user_data: UserCreate,
     db: Session = Depends(get_db),
-    current_user = Depends(require_superadmin)
+    current_user = Depends(require_admin_or_superadmin)
 ):
-    """Create new user (SuperAdmin only)"""
+    """Create new user (Admin and SuperAdmin only)"""
+    
+    # Admin can only create 'user' role, SuperAdmin can create any role
+    if current_user.role in ['admin1', 'admin2', 'admin'] and user_data.role not in ['user']:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin can only create users with 'user' role"
+        )
     # Check if username or email already exists
     existing_user = db.query(User).filter(
         (User.username == user_data.username) | (User.email == user_data.email)
@@ -152,11 +159,25 @@ async def update_user(
             detail="User not found"
         )
     
+    # Admin cannot modify superadmin users
+    if user.role == 'superadmin' and current_user.role in ['admin1', 'admin2', 'admin']:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin cannot modify superadmin users"
+        )
+    
     # Only superadmin can change roles to superadmin
     if user_data.role == 'superadmin' and current_user.role != 'superadmin':
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only superadmin can create superadmin users"
+        )
+    
+    # Admin can only assign 'user' role
+    if current_user.role in ['admin1', 'admin2', 'admin'] and user_data.role and user_data.role not in ['user']:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin can only assign 'user' role"
         )
     
     # Check for duplicates
@@ -188,9 +209,9 @@ async def update_user(
 async def delete_user(
     user_id: str,
     db: Session = Depends(get_db),
-    current_user = Depends(require_superadmin)
+    current_user = Depends(require_admin_or_superadmin)
 ):
-    """Delete user (SuperAdmin only)"""
+    """Delete user (Admin/SuperAdmin only)"""
     if str(user_id) == str(current_user.id):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -202,6 +223,13 @@ async def delete_user(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
+        )
+    
+    # Admin cannot delete superadmin users
+    if user.role == 'superadmin' and current_user.role in ['admin1', 'admin2', 'admin']:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin cannot delete superadmin users"
         )
     
     db.delete(user)
@@ -228,6 +256,13 @@ async def toggle_user_status(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
+        )
+    
+    # Admin cannot change superadmin status
+    if user.role == 'superadmin' and current_user.role in ['admin1', 'admin2', 'admin']:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin cannot change superadmin status"
         )
     
     user.is_active = status_data.is_active
