@@ -1,13 +1,13 @@
 from fastapi import HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import List
-import jwt
+from jose import jwt, JWTError
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User
 import os
 
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
+SECRET_KEY = os.getenv("JWT_SECRET", "your-secret-key-here")
 security = HTTPBearer()
 
 def get_current_user(
@@ -33,7 +33,7 @@ def get_current_user(
                 detail="User not found"
             )
         return user
-    except jwt.PyJWTError:
+    except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials"

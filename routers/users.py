@@ -12,15 +12,23 @@ router = APIRouter(prefix="/users", tags=["users"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @router.get("/", response_model=List[UserResponse])
+@router.get("", response_model=List[UserResponse])  # Handle both /users and /users/
 async def get_users(
     db: Session = Depends(get_db),
     current_user = Depends(require_admin_or_superadmin)
 ):
     """Get all users (Admin/SuperAdmin only)"""
-    users = db.query(User).all()
-    return users
+    try:
+        users = db.query(User).all()
+        return users
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch users: {str(e)}"
+        )
 
 @router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)  # Handle both /users and /users/
 async def create_user(
     user_data: UserCreate,
     db: Session = Depends(get_db),
