@@ -31,7 +31,7 @@ from app.security import (
 )
 
 # Import new routers
-from routers import users
+from routers import users, auth
 from app.logging_config import (
     setup_logging, 
     get_logger, 
@@ -394,6 +394,10 @@ if os.getenv('ENVIRONMENT', 'development') == 'development':
             }
         }
 
+# Include routers
+app.include_router(users.router)
+app.include_router(auth.router)
+
 if __name__ == "__main__":
     import uvicorn
     
@@ -419,9 +423,4 @@ if __name__ == "__main__":
             })
     
     uvicorn.run(app, **config)
-
-
-
-# Include routers
-app.include_router(users.router)
 

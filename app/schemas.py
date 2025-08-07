@@ -181,3 +181,53 @@ class SuccessResponse(BaseModel):
     data: Optional[dict] = None
     timestamp: datetime = Field(default_factory=datetime.now)
 
+
+# Forgot Password Schemas
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr = Field(..., description="Email address to send reset link")
+    
+    @validator('email')
+    def validate_email(cls, v):
+        if not v:
+            raise ValueError('Email is required')
+        
+        if len(v) > 254:
+            raise ValueError('Email address is too long')
+        
+        return v.lower()
+
+class ForgotPasswordResponse(BaseModel):
+    message: str
+    email: str
+
+class VerifyResetTokenResponse(BaseModel):
+    valid: bool
+    message: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(..., min_length=1, description="Password reset token")
+    new_password: str = Field(..., min_length=6, max_length=128, description="New password")
+    
+    @validator('new_password')
+    def validate_new_password(cls, v):
+        if len(v) < 6:
+            raise ValueError('New password must be at least 6 characters long')
+        
+        if len(v) > 128:
+            raise ValueError('Password must be less than 128 characters')
+        
+        # Basic password requirements
+        has_letter = bool(re.search(r'[a-zA-Z]', v))
+        has_number = bool(re.search(r'\d', v))
+        
+        if not has_letter:
+            raise ValueError('New password must contain at least one letter')
+        
+        if not has_number:
+            raise ValueError('New password must contain at least one number')
+        
+        return v
+
+class ResetPasswordResponse(BaseModel):
+    message: str
+
