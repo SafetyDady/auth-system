@@ -4,7 +4,8 @@ from typing import List
 from app.database import get_db
 from app.models import User
 from models.user import UserCreate, UserUpdate, UserResponse, PasswordChange, UserStatusUpdate
-from dependencies.auth import get_current_user, require_admin_or_superadmin, require_superadmin
+from app.auth import get_current_user
+from dependencies.auth import require_admin_or_superadmin, require_superadmin
 from passlib.context import CryptContext
 from datetime import datetime
 
@@ -12,7 +13,6 @@ router = APIRouter(prefix="/users", tags=["users"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @router.get("/", response_model=List[UserResponse])
-@router.get("", response_model=List[UserResponse])  # Handle both /users and /users/
 async def get_users(
     db: Session = Depends(get_db),
     current_user = Depends(require_admin_or_superadmin)
@@ -28,7 +28,6 @@ async def get_users(
         )
 
 @router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-@router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)  # Handle both /users and /users/
 async def create_user(
     user_data: UserCreate,
     db: Session = Depends(get_db),
