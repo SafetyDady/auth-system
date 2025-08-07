@@ -28,6 +28,9 @@ from app.security import (
     log_security_event,
     get_cors_origins
 )
+
+# Import new routers
+from routers import users
 from app.logging_config import (
     setup_logging, 
     get_logger, 
@@ -467,4 +470,8 @@ async def get_users(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch users"
         )
+
+
+# Include routers
+app.include_router(users.router)
 
