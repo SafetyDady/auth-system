@@ -50,7 +50,7 @@ def create_user(db: Session, user: UserCreate):
     db_user = User(
         username=user.username,
         email=user.email,
-        password_hash=hashed_password,
+        hashed_password=hashed_password,  # Use hashed_password attribute
         role=user.role
     )
     db.add(db_user)
