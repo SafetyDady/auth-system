@@ -4,7 +4,43 @@ from .auth import verify_password, get_password_hash
 from .schemas import UserCreate
 
 def get_user_by_username(db: Session, username: str):
-    return db.query(User).filter(User.username == username).first()
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # Try direct SQL query to avoid ORM mapping issues
+        from sqlalchemy import text
+        
+        logger.info(f"🔍 DEBUG: Querying user with raw SQL")
+        result = db.execute(
+            text("SELECT id, username, email, password_hash, role, is_active, created_at, last_login FROM users WHERE username = :username"),
+            {"username": username}
+        ).fetchone()
+        
+        if result:
+            logger.info(f"🔍 DEBUG: Raw SQL found user: {result.username}")
+            # Create a simple object with the data
+            class UserResult:
+                def __init__(self, row):
+                    self.id = row.id
+                    self.username = row.username
+                    self.email = row.email
+                    self.password_hash = row.password_hash
+                    self.role = row.role
+                    self.is_active = row.is_active
+                    self.created_at = row.created_at
+                    self.last_login = row.last_login
+            
+            return UserResult(result)
+        else:
+            logger.warning(f"🔍 DEBUG: Raw SQL - User not found")
+            return None
+            
+    except Exception as e:
+        logger.error(f"🚨 DEBUG: Raw SQL query failed: {str(e)}")
+        # Fallback to ORM
+        logger.info(f"🔍 DEBUG: Falling back to ORM query")
+        return db.query(User).filter(User.username == username).first()
 
 def get_user_by_email(db: Session, email: str):
     return db.query(User).filter(User.email == email).first()
