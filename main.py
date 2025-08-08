@@ -300,6 +300,16 @@ async def login(request: Request, user_credentials: UserLogin, db: Session = Dep
             data={"sub": user.username}, expires_delta=access_token_expires
         )
         
+        # Convert user object to Pydantic model
+        user_data = UserSchema(
+            id=user.id,
+            username=user.username,
+            email=user.email,
+            role=user.role,
+            is_active=user.is_active,
+            created_at=user.created_at
+        )
+        
         # Log successful login
         log_auth_event(
             "login_success",
@@ -311,7 +321,7 @@ async def login(request: Request, user_credentials: UserLogin, db: Session = Dep
         return {
             "access_token": access_token,
             "token_type": "bearer",
-            "user": user,
+            "user": user_data,  # Use converted Pydantic model
             "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60  # Convert to seconds
         }
         
