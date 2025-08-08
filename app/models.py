@@ -7,7 +7,7 @@ import uuid
 class User(Base):
     __tablename__ = "users"
     
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = Column(Integer, primary_key=True, index=True)  # Changed from String UUID to Integer
     username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)  # Use hashed_password column directly
@@ -23,7 +23,7 @@ class PasswordResetToken(Base):
     __tablename__ = "password_reset_tokens"
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)  # Changed from String to Integer
     token = Column(String(255), unique=True, index=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     expires_at = Column(DateTime, nullable=False, index=True)

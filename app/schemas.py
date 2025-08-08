@@ -112,7 +112,7 @@ class UserCreate(BaseModel):
         return v.lower()
 
 class User(BaseModel):
-    id: str
+    id: int  # Changed from str to int to match database
     username: str
     email: str
     role: str
