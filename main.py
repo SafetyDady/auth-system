@@ -234,7 +234,7 @@ async def root(request: Request):
         ]
     }
 
-@app.post("/auth/login")  # Removed response_model=Token temporarily for debugging
+@app.post("/auth/login", response_class=JSONResponse)  # Disable automatic response validation
 @limiter.limit("5/minute")  # Strict rate limiting for auth
 async def login(request: Request, user_credentials: UserLogin, db: Session = Depends(get_db)):
     """Enhanced login endpoint with security features"""
@@ -333,16 +333,17 @@ async def login(request: Request, user_credentials: UserLogin, db: Session = Dep
             details={"role": user.role}
         )
         
-        # Return raw dict (bypass all Pydantic validation)
-        print(f"🔍 DEBUG LOGIN: Preparing response dict")
-        response_dict = {
-            "access_token": access_token,
-            "token_type": "bearer",
-            "user": user_dict,  # Use raw dict instead of Pydantic model
-            "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60  # Convert to seconds
-        }
-        print(f"🔍 DEBUG LOGIN: Response dict prepared, returning...")
-        return response_dict
+        # Return JSONResponse to bypass all validation
+        print(f"🔍 DEBUG LOGIN: Preparing JSONResponse")
+        return JSONResponse(
+            status_code=200,
+            content={
+                "access_token": access_token,
+                "token_type": "bearer",
+                "user": user_dict,  # Use raw dict instead of Pydantic model
+                "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60  # Convert to seconds
+            }
+        )
         
     except HTTPException as http_exc:
         # Re-raise HTTP exceptions as-is
