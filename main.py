@@ -239,6 +239,54 @@ async def root(request: Request):
         ]
     }
 
+# TEST LOGIN ENDPOINT - Isolated test without dependencies
+@app.post("/test-login")
+async def test_login(request: Request):
+    """Isolated test login endpoint - no dependencies, no validation"""
+    
+    try:
+        # Get request body
+        body = await request.json()
+        username = body.get("username", "")
+        password = body.get("password", "")
+        
+        print(f"🧪 TEST LOGIN: Request for user: {username}")
+        
+        # Simple validation
+        if not username or not password:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Username and password required"}
+            )
+        
+        # Hard-coded success response (no database, no dependencies)
+        print(f"🧪 TEST LOGIN: Returning success response")
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": "Test login successful",
+                "access_token": "test-token-12345",
+                "token_type": "bearer",
+                "user": {
+                    "id": "test-1",
+                    "username": username,
+                    "email": "test@sme.com",
+                    "role": "admin",
+                    "is_active": True,
+                    "created_at": "2024-01-01T00:00:00"
+                },
+                "expires_in": 1800
+            }
+        )
+        
+    except Exception as e:
+        print(f"🧪 TEST LOGIN: Exception: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Test login error: {str(e)}"}
+        )
+
 @app.post("/auth/login", response_class=JSONResponse)  # Disable automatic response validation
 @limiter.limit("5/minute")  # Strict rate limiting for auth
 async def login(request: Request, user_credentials: UserLogin, db: Session = Depends(get_db)):
