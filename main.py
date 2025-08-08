@@ -316,7 +316,7 @@ async def login(request: Request, user_credentials: UserLogin, db: Session = Dep
         # Convert user object to dict (bypass Pydantic validation)
         print(f"🔍 DEBUG LOGIN: Converting user to dict")
         user_dict = {
-            "id": user.id,
+            "id": str(user.id),  # Convert integer ID to string
             "username": user.username,
             "email": user.email,
             "role": user.role,
