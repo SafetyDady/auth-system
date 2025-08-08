@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional
-from jose import JWTError, jwt
+import jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -108,7 +108,7 @@ def verify_token(token: str):
                 headers={"WWW-Authenticate": "Bearer"},
             )
         return username
-    except JWTError as e:
+    except jwt.InvalidTokenError as e:
         print(f"JWT decode error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
