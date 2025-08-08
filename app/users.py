@@ -13,7 +13,7 @@ def get_user_by_username(db: Session, username: str):
         
         logger.info(f"🔍 DEBUG: Querying user with raw SQL")
         result = db.execute(
-            text("SELECT id, username, email, password_hash, role, is_active, created_at, last_login FROM users WHERE username = :username"),
+            text("SELECT id, username, email, hashed_password, role, is_active, created_at, last_login FROM users WHERE username = :username"),
             {"username": username}
         ).fetchone()
         
@@ -25,7 +25,7 @@ def get_user_by_username(db: Session, username: str):
                     self.id = row.id
                     self.username = row.username
                     self.email = row.email
-                    self.password_hash = row.password_hash
+                    self.hashed_password = row.hashed_password
                     self.role = row.role
                     self.is_active = row.is_active
                     self.created_at = row.created_at
@@ -79,12 +79,12 @@ def authenticate_user(db: Session, username: str, password: str):
         
         # Step 3: Check password field
         password_field = None
-        if hasattr(user, 'password_hash'):
-            password_field = user.password_hash
-            logger.info(f"🔍 DEBUG: Using password_hash field")
-        elif hasattr(user, 'hashed_password'):
+        if hasattr(user, 'hashed_password'):
             password_field = user.hashed_password
             logger.info(f"🔍 DEBUG: Using hashed_password field")
+        elif hasattr(user, 'password_hash'):
+            password_field = user.password_hash
+            logger.info(f"🔍 DEBUG: Using password_hash field")
         else:
             logger.error(f"❌ DEBUG: No password field found for user {username}")
             return False

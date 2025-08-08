@@ -10,7 +10,7 @@ class User(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column("password_hash", String, nullable=False)  # Map hashed_password attribute to password_hash column
+    hashed_password = Column(String, nullable=False)  # Use hashed_password column directly
     role = Column(String, default="user", nullable=False)  # superadmin, admin1, admin2, user
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
