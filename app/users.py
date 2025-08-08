@@ -26,8 +26,20 @@ def authenticate_user(db: Session, username: str, password: str):
     try:
         user = get_user_by_username(db, username)
         if not user:
+            print(f"User {username} not found")
             return False
-        if not verify_password(password, user.hashed_password):
+        
+        # Check if user has password_hash attribute (database column)
+        if hasattr(user, 'password_hash'):
+            password_field = user.password_hash
+        elif hasattr(user, 'hashed_password'):
+            password_field = user.hashed_password
+        else:
+            print(f"No password field found for user {username}")
+            return False
+            
+        if not verify_password(password, password_field):
+            print(f"Password verification failed for user {username}")
             return False
         return user
     except Exception as e:
