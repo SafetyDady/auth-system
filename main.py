@@ -234,7 +234,7 @@ async def root(request: Request):
         ]
     }
 
-@app.post("/auth/login", response_model=Token)
+@app.post("/auth/login")  # Removed response_model=Token temporarily for debugging
 @limiter.limit("5/minute")  # Strict rate limiting for auth
 async def login(request: Request, user_credentials: UserLogin, db: Session = Depends(get_db)):
     """Enhanced login endpoint with security features"""
