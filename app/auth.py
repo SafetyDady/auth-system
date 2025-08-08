@@ -12,22 +12,34 @@ import os
 
 load_dotenv()
 
-# Get SECRET_KEY with simple handling
-SECRET_KEY = os.getenv("SECRET_KEY")
-if not SECRET_KEY:
-    raise ValueError(
-        "SECRET_KEY environment variable is required. "
-        "Please set SECRET_KEY in your environment variables."
-    )
+# DEBUG: Check raw environment variable
+raw_secret = os.getenv("SECRET_KEY")
+print(f"DEBUG - Raw SECRET_KEY from env: {repr(raw_secret)}")
+print(f"DEBUG - Raw SECRET_KEY type: {type(raw_secret)}")
 
-# Ensure SECRET_KEY is a proper string (no base64 decoding)
-if isinstance(SECRET_KEY, bytes):
-    SECRET_KEY = SECRET_KEY.decode('utf-8')
+# TEMPORARY: Hard-code SECRET_KEY for testing
+SECRET_KEY = "test_secret_key_for_jwt_debugging_12345678901234567890"
+print(f"DEBUG - Using hard-coded SECRET_KEY for testing")
+print(f"DEBUG - Hard-coded SECRET_KEY length: {len(SECRET_KEY)}")
+print(f"DEBUG - Hard-coded SECRET_KEY type: {type(SECRET_KEY)}")
 
-# Remove any quotes if present
-SECRET_KEY = SECRET_KEY.strip('"').strip("'")
+# Original logic (commented out for debugging)
+# SECRET_KEY = os.getenv("SECRET_KEY")
+# if not SECRET_KEY:
+#     raise ValueError(
+#         "SECRET_KEY environment variable is required. "
+#         "Please set SECRET_KEY in your environment variables."
+#     )
+# 
+# # Ensure SECRET_KEY is a proper string (no base64 decoding)
+# if isinstance(SECRET_KEY, bytes):
+#     SECRET_KEY = SECRET_KEY.decode('utf-8')
+# 
+# # Remove any quotes if present
+# SECRET_KEY = SECRET_KEY.strip('"').strip("'")
 
-print(f"Auth config - SECRET_KEY loaded successfully, length: {len(SECRET_KEY)} characters")
+print(f"Auth config - SECRET_KEY configured successfully")
+print(f"Auth config - SECRET_KEY length: {len(SECRET_KEY)} characters")
 print(f"Auth config - SECRET_KEY type: {type(SECRET_KEY)}")
 print(f"Auth config - SECRET_KEY first 10 chars: {SECRET_KEY[:10]}...")
 
