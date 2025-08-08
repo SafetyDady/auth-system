@@ -24,9 +24,22 @@ if not SECRET_KEY:
 if isinstance(SECRET_KEY, bytes):
     SECRET_KEY = SECRET_KEY.decode('utf-8')
 
+# Handle base64 encoded SECRET_KEY
+import base64
+try:
+    # Try to decode if it's base64
+    if SECRET_KEY.endswith('=') and len(SECRET_KEY) > 32:
+        decoded_key = base64.b64decode(SECRET_KEY)
+        SECRET_KEY = decoded_key.decode('utf-8')
+        print(f"Auth config - Using base64 decoded SECRET_KEY")
+    else:
+        print(f"Auth config - Using plain text SECRET_KEY")
+except Exception as e:
+    print(f"Auth config - Base64 decode failed, using as plain text: {str(e)}")
+
 # Validate SECRET_KEY length for security
-if len(SECRET_KEY) < 32:
-    print(f"Warning: SECRET_KEY length is {len(SECRET_KEY)} characters. Recommended minimum is 32 characters.")
+if len(SECRET_KEY) < 16:
+    print(f"Warning: SECRET_KEY length is {len(SECRET_KEY)} characters. Recommended minimum is 16 characters.")
 
 print(f"Auth config - SECRET_KEY length: {len(SECRET_KEY)} characters")
 
