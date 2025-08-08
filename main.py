@@ -163,7 +163,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
-    """Handle unexpected exceptions"""
+    """Handle unexpected exceptions with safe serialization"""
     request_id = str(uuid.uuid4())
     
     # Safely log error without causing JSON serialization issues
@@ -182,13 +182,18 @@ async def general_exception_handler(request: Request, exc: Exception):
     if environment == 'production':
         detail = "Internal server error"
     else:
-        # Ensure the error message is JSON serializable
+        # Safe error message handling - avoid object serialization issues
         try:
-            detail = str(exc)
-            # Test if it's JSON serializable
-            json.dumps(detail)
-        except (TypeError, ValueError):
-            detail = f"Error of type {type(exc).__name__}"
+            # Convert exception to string and test JSON serialization
+            error_str = str(exc)
+            json.dumps(error_str)
+            detail = error_str
+        except (TypeError, ValueError, AttributeError):
+            # If serialization fails, use safe fallback
+            detail = f"Error of type {type(exc).__name__}: Serialization error"
+        except Exception:
+            # Ultimate fallback
+            detail = "Internal server error - unable to serialize error details"
     
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
