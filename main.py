@@ -10,6 +10,7 @@ from datetime import timedelta
 from typing import List
 import os
 import uuid
+import json
 from contextlib import asynccontextmanager
 
 # Import our modules
@@ -102,9 +103,28 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     """Handle validation errors"""
     request_id = str(uuid.uuid4())
     
+    # Convert errors to JSON-serializable format
+    try:
+        error_details = exc.errors()
+        # Ensure all error details are JSON serializable
+        serializable_errors = []
+        for error in error_details:
+            serializable_error = {}
+            for key, value in error.items():
+                try:
+                    # Test if value is JSON serializable
+                    json.dumps(value)
+                    serializable_error[key] = value
+                except (TypeError, ValueError):
+                    # Convert non-serializable values to string
+                    serializable_error[key] = str(value)
+            serializable_errors.append(serializable_error)
+    except Exception as e:
+        serializable_errors = [{"error": "Failed to parse validation errors", "details": str(e)}]
+    
     log_security_event(
         "validation_error",
-        {"errors": exc.errors(), "request_id": request_id},
+        {"errors": serializable_errors, "request_id": request_id},
         request
     )
     
@@ -113,7 +133,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={
             "error": "Validation Error",
             "message": "Invalid input data",
-            "details": exc.errors(),
+            "details": serializable_errors,
             "request_id": request_id
         }
     )
