@@ -12,36 +12,24 @@ import os
 
 load_dotenv()
 
-# Get SECRET_KEY with proper error handling and encoding
-SECRET_KEY = os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET")
+# Get SECRET_KEY with simple handling
+SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     raise ValueError(
         "SECRET_KEY environment variable is required. "
         "Please set SECRET_KEY in your environment variables."
     )
 
-# Ensure SECRET_KEY is a proper string
+# Ensure SECRET_KEY is a proper string (no base64 decoding)
 if isinstance(SECRET_KEY, bytes):
     SECRET_KEY = SECRET_KEY.decode('utf-8')
 
-# Handle base64 encoded SECRET_KEY
-import base64
-try:
-    # Try to decode if it's base64
-    if SECRET_KEY.endswith('=') and len(SECRET_KEY) > 32:
-        decoded_key = base64.b64decode(SECRET_KEY)
-        SECRET_KEY = decoded_key.decode('utf-8')
-        print(f"Auth config - Using base64 decoded SECRET_KEY")
-    else:
-        print(f"Auth config - Using plain text SECRET_KEY")
-except Exception as e:
-    print(f"Auth config - Base64 decode failed, using as plain text: {str(e)}")
+# Remove any quotes if present
+SECRET_KEY = SECRET_KEY.strip('"').strip("'")
 
-# Validate SECRET_KEY length for security
-if len(SECRET_KEY) < 16:
-    print(f"Warning: SECRET_KEY length is {len(SECRET_KEY)} characters. Recommended minimum is 16 characters.")
-
-print(f"Auth config - SECRET_KEY length: {len(SECRET_KEY)} characters")
+print(f"Auth config - SECRET_KEY loaded successfully, length: {len(SECRET_KEY)} characters")
+print(f"Auth config - SECRET_KEY type: {type(SECRET_KEY)}")
+print(f"Auth config - SECRET_KEY first 10 chars: {SECRET_KEY[:10]}...")
 
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
