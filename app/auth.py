@@ -39,10 +39,28 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    import logging
+    logger = logging.getLogger(__name__)
+    
     try:
-        return pwd_context.verify(plain_password, hashed_password)
+        logger.info(f"🔍 DEBUG: verify_password called")
+        logger.info(f"🔍 DEBUG: plain_password length: {len(plain_password)}")
+        logger.info(f"🔍 DEBUG: hashed_password length: {len(hashed_password) if hashed_password else 0}")
+        logger.info(f"🔍 DEBUG: hashed_password starts with: {hashed_password[:10] if hashed_password else 'None'}...")
+        
+        # Check if hashed_password looks like bcrypt hash
+        if hashed_password and hashed_password.startswith('$2b$'):
+            logger.info(f"🔍 DEBUG: Hash format looks like bcrypt")
+        else:
+            logger.warning(f"⚠️ DEBUG: Hash format doesn't look like bcrypt: {hashed_password[:20] if hashed_password else 'None'}")
+        
+        result = pwd_context.verify(plain_password, hashed_password)
+        logger.info(f"🔍 DEBUG: pwd_context.verify result: {result}")
+        
+        return result
     except Exception as e:
-        print(f"Password verification error: {str(e)}")
+        logger.error(f"🚨 DEBUG: Password verification error: {str(e)}")
+        logger.error(f"🚨 DEBUG: Exception type: {type(e).__name__}")
         return False
 
 def get_password_hash(password: str) -> str:
