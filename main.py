@@ -239,6 +239,8 @@ async def root(request: Request):
 async def login(request: Request, user_credentials: UserLogin, db: Session = Depends(get_db)):
     """Enhanced login endpoint with security features"""
     
+    print(f"🔍 DEBUG LOGIN: Starting login process for user: {user_credentials.username}")
+    
     try:
         # Validate request size
         validate_request_size(request)
@@ -267,8 +269,17 @@ async def login(request: Request, user_credentials: UserLogin, db: Session = Dep
             )
         
         # Authenticate user
+        print(f"🔍 DEBUG LOGIN: Calling authenticate_user for: {user_credentials.username}")
         user = authenticate_user(db, user_credentials.username, user_credentials.password)
+        print(f"🔍 DEBUG LOGIN: authenticate_user returned: {user}")
+        print(f"🔍 DEBUG LOGIN: user type: {type(user)}")
+        if user:
+            print(f"🔍 DEBUG LOGIN: user.id = {user.id} (type: {type(user.id)})")
+            print(f"🔍 DEBUG LOGIN: user.username = {user.username}")
+            print(f"🔍 DEBUG LOGIN: user.role = {user.role}")
+        
         if not user:
+            print(f"🔍 DEBUG LOGIN: Authentication failed for: {user_credentials.username}")
             log_auth_event(
                 "login_failed",
                 username=user_credentials.username,
@@ -295,12 +306,15 @@ async def login(request: Request, user_credentials: UserLogin, db: Session = Dep
             )
         
         # Create access token
+        print(f"🔍 DEBUG LOGIN: Creating access token for: {user.username}")
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
             data={"sub": user.username}, expires_delta=access_token_expires
         )
+        print(f"🔍 DEBUG LOGIN: Access token created successfully")
         
         # Convert user object to dict (bypass Pydantic validation)
+        print(f"🔍 DEBUG LOGIN: Converting user to dict")
         user_dict = {
             "id": user.id,
             "username": user.username,
@@ -309,6 +323,7 @@ async def login(request: Request, user_credentials: UserLogin, db: Session = Dep
             "is_active": user.is_active,
             "created_at": user.created_at.isoformat()  # Convert datetime to string
         }
+        print(f"🔍 DEBUG LOGIN: user_dict created: {user_dict}")
         
         # Log successful login
         log_auth_event(
@@ -319,18 +334,26 @@ async def login(request: Request, user_credentials: UserLogin, db: Session = Dep
         )
         
         # Return raw dict (bypass all Pydantic validation)
-        return {
+        print(f"🔍 DEBUG LOGIN: Preparing response dict")
+        response_dict = {
             "access_token": access_token,
             "token_type": "bearer",
             "user": user_dict,  # Use raw dict instead of Pydantic model
             "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60  # Convert to seconds
         }
+        print(f"🔍 DEBUG LOGIN: Response dict prepared, returning...")
+        return response_dict
         
-    except HTTPException:
+    except HTTPException as http_exc:
         # Re-raise HTTP exceptions as-is
+        print(f"🔍 DEBUG LOGIN: HTTPException caught: {http_exc.detail}")
         raise
     except Exception as e:
         # Handle any unexpected exceptions
+        print(f"🔍 DEBUG LOGIN: Unexpected exception caught: {str(e)}")
+        print(f"🔍 DEBUG LOGIN: Exception type: {type(e)}")
+        print(f"🔍 DEBUG LOGIN: Exception args: {e.args}")
+        
         log_security_event(
             "login_exception",
             {"username": user_credentials.username, "error": str(e)},
