@@ -1,5 +1,5 @@
 """
-Enhanced FastAPI application with production-grade security and features
+SME Management System - Enhanced FastAPI application with production-grade security and features
 """
 from fastapi import FastAPI, HTTPException, Depends, status, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -56,9 +56,9 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI app with enhanced configuration
 app = FastAPI(
-    title="Auth System with Role Dashboard",
+    title="SME Management System API",
     version="1.0.0",
-    description="Production-ready authentication system with JWT and role-based access control",
+    description="Comprehensive SME Management System with HR, Project Management, Inventory, and Financial modules",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
@@ -215,11 +215,23 @@ async def add_request_id(request: Request, call_next):
 async def root(request: Request):
     """Root endpoint with API information"""
     return {
-        "message": "Auth System API",
+        "message": "SME Management System API",
         "version": "1.0.0",
         "docs": "/docs",
         "health": "/health",
-        "environment": os.getenv('ENVIRONMENT', 'development')
+        "environment": os.getenv('ENVIRONMENT', 'development'),
+        "modules": [
+            "Authentication & User Management",
+            "Employee Management", 
+            "Department Management",
+            "Project Management",
+            "Customer Management",
+            "Material & Inventory Management",
+            "Time & Attendance Management",
+            "Leave Management",
+            "Tool Management",
+            "Analytics & Reporting"
+        ]
     }
 
 @app.post("/auth/login", response_model=Token)
@@ -428,6 +440,23 @@ if os.getenv('ENVIRONMENT', 'development') == 'development':
 # Include routers
 app.include_router(users.router)
 app.include_router(auth.router)
+
+# Include SME Management routers
+from routers.sme_routers import (
+    employee_router, department_router, project_router, 
+    customer_router, material_router, timeentry_router,
+    leave_router, tool_router, analytics_router
+)
+
+app.include_router(employee_router)
+app.include_router(department_router)
+app.include_router(project_router)
+app.include_router(customer_router)
+app.include_router(material_router)
+app.include_router(timeentry_router)
+app.include_router(leave_router)
+app.include_router(tool_router)
+app.include_router(analytics_router)
 
 if __name__ == "__main__":
     import uvicorn
