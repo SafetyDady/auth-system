@@ -166,18 +166,29 @@ async def general_exception_handler(request: Request, exc: Exception):
     """Handle unexpected exceptions"""
     request_id = str(uuid.uuid4())
     
-    log_error(exc, {
-        "request_id": request_id,
-        "path": request.url.path,
-        "method": request.method
-    })
+    # Safely log error without causing JSON serialization issues
+    try:
+        log_error(exc, {
+            "request_id": request_id,
+            "path": str(request.url.path),
+            "method": str(request.method)
+        })
+    except Exception as log_exc:
+        # If logging fails, at least log the basic info
+        print(f"Logging failed: {str(log_exc)}, Original error: {str(exc)}")
     
     # Don't expose internal error details in production
     environment = os.getenv('ENVIRONMENT', 'development')
     if environment == 'production':
         detail = "Internal server error"
     else:
-        detail = str(exc)
+        # Ensure the error message is JSON serializable
+        try:
+            detail = str(exc)
+            # Test if it's JSON serializable
+            json.dumps(detail)
+        except (TypeError, ValueError):
+            detail = f"Error of type {type(exc).__name__}"
     
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
